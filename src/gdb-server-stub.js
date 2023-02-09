@@ -146,11 +146,15 @@ export class GDBServerStub {
       if (reply == ok()) {
         this.noAckMode = true;
       }
+    } else if (m = packet.match(/^QNonStop/)) {
+      reply = this.handler.handleNonStop(packet.match(/^QNonStop:0/) ? true : false);
     } else if (m = packet.match(/^qfThreadInfo/)) {
       reply = this.handler.handleThreadInfo();
     } else if (m = packet.match(/^qsThreadInfo/)) {
       // l indicates the end of the list.
       reply = ok('l');
+    } else if (m = packet.match(/^qAttached/)) {
+      reply = ok('1');
     } else if (m = packet.match(/^qC/)) {
       reply = this.handler.handleCurrentThread();
     } else if (m = packet.match(/^H([cgm])(-?[0-9]+)/)) {
@@ -195,9 +199,11 @@ export class GDBServerStub {
       reply = unsupported();
     }
     if (reply !== undefined) {
-      const message = this.packageReply(reply);
-      trace(`->:${message}`);
-      socket.write(message);
+      Promise.resolve(reply).then(reply => {
+        const message = this.packageReply(reply);
+        trace(`->:${message}`);
+        socket.write(message);
+      });
     }
   }
 
@@ -223,7 +229,7 @@ export const ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS = 0x34;
 export function ok(value) {
   if (value === undefined) {
     return 'OK';
-  } else if (typeof(value) == 'string') {
+  } else if ((typeof(value) == 'object' && value instanceof Promise) || typeof(value) == 'string') {
     return value;
   } else if (Array.isArray(value)) {
     return _binaryToHex(value);
@@ -237,7 +243,7 @@ export function threadIds(ids) {
 }
 
 export function currentThreadId(id) {
-  return 'QC' + id.toString(16);
+  return Promise.resolve(id).then(id => { return 'QC' + id.toString(16); });
 }
 
  /**

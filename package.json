@@ -1,5 +1,5 @@
 {
-  "name": "gdbserver-stub",
+  "name": "gdbserver-stub TCF",
   "version": "0.1.0",
   "description": "A server stub that handles gdb-remote-debug-protocol",
   "main": "src/index.js",
@@ -18,5 +18,11 @@
     "babel-jest": "^26.3.0",
     "debug": "^4.1.1",
     "jest": "^26.4.2"
+  },
+  "dependencies": {
+    "@rauschma/stringio": "^1.4.0",
+    "child_process": "^1.0.2",
+    "eslint": "^8.33.0",
+    "iter-ops": "^3.0.7"
   }
 }

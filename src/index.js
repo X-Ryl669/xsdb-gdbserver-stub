@@ -5,19 +5,28 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { R3000 } from "./r3000.js";
+import { XSDB } from "./xsdb.js";
 import { GDBServerStub } from "./gdb-server-stub.js";
 
-function runServer() {
-  const r3000 = new R3000();
-  const server = new GDBServerStub(r3000);
-  server.start("localhost", 2424);
+function runServer(args) {
+  const xsdb = new XSDB(args.slice(1));
+  const server = new GDBServerStub(xsdb);
+  server.start("localhost", args[0] ? args[0] : 2424);
   function runCpu() {
-    r3000.run(100);
+    xsdb.run(100);
   }
   setInterval(runCpu, 100);
 }
 
+process.on("unhandledRejection", (error) => {
+  console.log("Unhandler Rejection");
+  console.error(error); // This prints error with stack included (as for normal errors)
+  throw error; // Following best practices re-throw error and let the process exit with error code
+});
+
 if (process.env.NODE_ENV != 'test') {
-  runServer();
+  let args = process.argv.slice(2);
+  if (args[0] == '--help' || args[0] == '-h' || args.len <= 2) {
+    console.log("Usage: " + process.argv[0] + " " + process.argv[1] + " listening_port xsdb_args");
+  } else runServer(args);
 }
